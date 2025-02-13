@@ -4,6 +4,7 @@
 #' integration sequence, and virus sequence
 #' @param unite If TRUE, calculate the lengths of each microsome separately, 
 #' otherwise calculate the sum of microsome lengths
+#' @param miss_value If true, allow one byte of mismatch
 #'
 #' @importFrom stringr str_count
 #'
@@ -16,7 +17,7 @@
 #'                      virus= c("C", "A", "T", "T", "A", "T", "A", "C"))
 #' seq_df <- t(seq_df) |> as.data.frame()
 #' get_mh(seq_df)
-get_mh <- function(seq_df, unite = TRUE) {
+get_mh <- function(seq_df, unite = TRUE, miss_value = FLASE) {
     seqs <- c(1,2,3,4,5)
     names(seqs) <- c("A", "T", "G", "C", "N")
     for (i in seq_len(ncol(seq_df))) {
@@ -26,6 +27,21 @@ get_mh <- function(seq_df, unite = TRUE) {
     aa2 <- seq_df[3, ] - seq_df[2, ]
     aa <- abs(aa1) + abs(aa2)
     aa <- as.numeric(aa)
+
+    modify_vector <- function(vec) {
+      n <- length(vec)
+      if (n < 3) return(vec)  # 长度小于3的向量不做处理
+      
+      for (i in 2:(n-1)) {
+        if (vec[i-1] == 0 && vec[i+1] == 0) {
+          vec[i] <- 0
+        }
+      }
+      return(vec)
+    }
+    if (miss_value) {
+        aa <- modify_vector(aa)
+    }
     # Count the number of more than two consecutive zeros
     bb <- aa[2:length(aa)] + aa[seq_len(length(aa)-1)]
     bb <- c(1, as.numeric(bb))
