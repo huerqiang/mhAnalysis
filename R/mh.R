@@ -71,6 +71,7 @@ get_mh <- function(seq_df, unite = TRUE, miss_value = FLASE) {
 #' @param result_rel SurVirus result (result of get_seq())
 #' @param unite If TRUE, calculate the lengths of each microsome separately, 
 #' otherwise calculate the sum of microsome lengths
+#' @param miss_value If true, allow one byte of mismatch
 #' @return dataframe
 #' @export
 #'
@@ -90,7 +91,7 @@ get_mh <- function(seq_df, unite = TRUE, miss_value = FLASE) {
 #' result_rel <- get_seq(result_rel, len = 10, BSgenome_host=BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, 
 #'     BSgenome_virus=BSgenomehpv16)
 #' result_rel <- add_mh(result_rel)
-add_mh <- function(result_rel, unite = TRUE) {
+add_mh <- function(result_rel, unite = TRUE, miss_value = FALSE) {
     mh <- rep(0, nrow(result_rel))
     for (i in seq_len(length(mh))) {
         seq_host <- result_rel[i, "seq_host40"]
@@ -99,7 +100,7 @@ add_mh <- function(result_rel, unite = TRUE) {
         seq_df <- strsplit(c(seq_host, seq_integration, seq_hpv), "")
         seq_df <- do.call(rbind, seq_df) |> as.data.frame()
         
-        mh[i] <- get_mh(seq_df, unite = unite)
+        mh[i] <- get_mh(seq_df, unite = unite, miss_value = miss_value)
     }
     result_rel$mh <- mh
     return(result_rel)
@@ -113,6 +114,7 @@ add_mh <- function(result_rel, unite = TRUE) {
 #' @param len flanking region size
 #' @param unite If TRUE, calculate the lengths of each microsome separately, 
 #' otherwise calculate the sum of microsome lengths
+#' @param miss_value If true, allow one byte of mismatch
 #'
 #' @return dataframe
 #' @export
@@ -135,7 +137,7 @@ add_mh <- function(result_rel, unite = TRUE) {
 #' result_rel <- get_seq(result_rel, len = 10, BSgenome_host=BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, 
 #'     BSgenome_virus=BSgenomehpv16)
 #' result_rel <- add_mh_flank(result_rel, len = 5)
-add_mh_flank <- function(result_rel, len, unite = TRUE) {
+add_mh_flank <- function(result_rel, len, unite = TRUE, miss_value = FALSE) {
     result_rel$mh <- rep(0, nrow(result_rel))
     for (i in seq_len(nrow(result_rel))) {
         n1 <- n2 <-  len
@@ -175,7 +177,7 @@ add_mh_flank <- function(result_rel, len, unite = TRUE) {
         n11 <- max(1, (length(aa) / 2 - n1 + 1))
         n22 <- min(ncol(seq_df), (length(aa)/2 + n2))
         seq_df <- seq_df[, n11:n22]
-        result_rel$mh[i] <- get_mh(seq_df, unite = unite)
+        result_rel$mh[i] <- get_mh(seq_df, unite = unite, miss_value = miss_value)
     }
     return(result_rel)
 }
